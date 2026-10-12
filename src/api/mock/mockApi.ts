@@ -1,7 +1,14 @@
 import type { ApiClient } from '../client'
 import { ApiError } from '../errors'
-import type { Course } from '../types'
+import type { Course, User } from '../types'
 import { categories, courses } from './fixtures'
+import { readJson, writeJson } from './storage'
+
+const USERS_KEY = 'way.mock.users'
+
+interface StoredUser extends User {
+  password: string
+}
 
 export interface MockApiOptions {
   storage: Storage
@@ -19,6 +26,18 @@ export function createMockApi(opts: MockApiOptions): ApiClient {
     const ms = Array.isArray(delay) ? delay[0] + Math.random() * (delay[1] - delay[0]) : delay
     if (ms > 0) await new Promise((r) => setTimeout(r, ms))
     else await Promise.resolve()
+  }
+
+  const users = () => readJson<StoredUser[]>(opts.storage, USERS_KEY, [])
+  const publicUser = ({ id, name, email }: StoredUser): User => ({ id, name, email })
+  const session = (u: StoredUser) => ({ user: publicUser(u), token: `mock-token-${u.id}` })
+
+  /** Токеноор хэрэглэгчийг олно, олдохгүй бол UNAUTHORIZED */
+  function requireUser(): User {
+    const token = opts.getToken()
+    const u = token ? users().find((x) => `mock-token-${x.id}` === token) : undefined
+    if (!u) throw new ApiError('UNAUTHORIZED', 'Нэвтэрнэ үү')
+    return publicUser(u)
   }
 
   function isOwned(_courseId: string): boolean {
@@ -65,9 +84,30 @@ export function createMockApi(opts: MockApiOptions): ApiClient {
       return [...categories]
     },
 
-    register: notImplemented,
-    login: notImplemented,
-    getMe: notImplemented,
+    async register({ name, email, password }) {
+      await wait()
+      const all = users()
+      const normalized = email.trim().toLowerCase()
+      if (all.some((u) => u.email === normalized)) {
+        throw new ApiError('VALIDATION', 'Энэ имэйл бүртгэлтэй байна')
+      }
+      const u: StoredUser = { id: crypto.randomUUID(), name: name.trim(), email: normalized, password }
+      writeJson(opts.storage, USERS_KEY, [...all, u])
+      return session(u)
+    },
+
+    async login({ email, password }) {
+      await wait()
+      const normalized = email.trim().toLowerCase()
+      const u = users().find((x) => x.email === normalized && x.password === password)
+      if (!u) throw new ApiError('UNAUTHORIZED', 'Имэйл эсвэл нууц үг буруу байна')
+      return session(u)
+    },
+
+    async getMe() {
+      await wait()
+      return requireUser()
+    },
     checkout: notImplemented,
     getMyCourses: notImplemented,
     getProgress: notImplemented,
