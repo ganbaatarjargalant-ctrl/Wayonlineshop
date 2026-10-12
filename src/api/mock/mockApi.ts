@@ -1,14 +1,18 @@
 import type { ApiClient } from '../client'
 import { ApiError } from '../errors'
-import type { Course, User } from '../types'
+import type { Course, Order, User } from '../types'
 import { categories, courses } from './fixtures'
 import { readJson, writeJson } from './storage'
 
 const USERS_KEY = 'way.mock.users'
+const ORDERS_KEY = 'way.mock.orders'
+const PROGRESS_KEY = 'way.mock.progress'
 
 interface StoredUser extends User {
   password: string
 }
+
+type StoredOrder = Order & { userId: string }
 
 export interface MockApiOptions {
   storage: Storage
@@ -40,8 +44,28 @@ export function createMockApi(opts: MockApiOptions): ApiClient {
     return publicUser(u)
   }
 
-  function isOwned(_courseId: string): boolean {
-    return false
+  const orders = () => readJson<StoredOrder[]>(opts.storage, ORDERS_KEY, [])
+  const progressMap = () => readJson<Record<string, string[]>>(opts.storage, PROGRESS_KEY, {})
+
+  function ownedIds(userId: string): Set<string> {
+    return new Set(orders().filter((o) => o.userId === userId).flatMap((o) => o.courseIds))
+  }
+
+  function isOwned(courseId: string): boolean {
+    try {
+      return ownedIds(requireUser().id).has(courseId)
+    } catch {
+      return false
+    }
+  }
+
+  /** Нэвтэрсэн бөгөөд хичээлийг худалдаж авсан байх ёстой */
+  function requireOwned(courseId: string): { user: User; course: Course } {
+    const user = requireUser()
+    const course = courses.find((c) => c.id === courseId)
+    if (!course) throw new ApiError('NOT_FOUND', 'Хичээл олдсонгүй')
+    if (!ownedIds(user.id).has(courseId)) throw new ApiError('FORBIDDEN', 'Энэ хичээлийг худалдаж авна уу')
+    return { user, course }
   }
 
   /** Худалдаж аваагүй, preview биш хичээлийн videoUrl-ийг нууна */
@@ -54,10 +78,6 @@ export function createMockApi(opts: MockApiOptions): ApiClient {
       }
     }
     return copy
-  }
-
-  const notImplemented = () => {
-    throw new Error('not implemented')
   }
 
   return {
@@ -108,9 +128,49 @@ export function createMockApi(opts: MockApiOptions): ApiClient {
       await wait()
       return requireUser()
     },
-    checkout: notImplemented,
-    getMyCourses: notImplemented,
-    getProgress: notImplemented,
-    markLessonComplete: notImplemented,
+
+    async checkout(courseIds) {
+      await wait()
+      const user = requireUser()
+      const owned = ownedIds(user.id)
+      const toBuy = courses.filter((c) => courseIds.includes(c.id) && !owned.has(c.id))
+      if (toBuy.length === 0) throw new ApiError('VALIDATION', 'Худалдаж авах хичээл алга')
+      const order: StoredOrder = {
+        id: crypto.randomUUID(),
+        userId: user.id,
+        courseIds: toBuy.map((c) => c.id),
+        total: toBuy.reduce((sum, c) => sum + c.price, 0),
+        status: 'paid',
+      }
+      writeJson(opts.storage, ORDERS_KEY, [...orders(), order])
+      const { userId: _userId, ...publicOrder } = order
+      return publicOrder
+    },
+
+    async getMyCourses() {
+      await wait()
+      const owned = ownedIds(requireUser().id)
+      return courses.filter((c) => owned.has(c.id)).map(present)
+    },
+
+    async getProgress(courseId) {
+      await wait()
+      const { user } = requireOwned(courseId)
+      return { courseId, completedLessonIds: progressMap()[`${user.id}:${courseId}`] ?? [] }
+    },
+
+    async markLessonComplete(courseId, lessonId) {
+      await wait()
+      const { user, course } = requireOwned(courseId)
+      if (!course.sections.some((s) => s.lessons.some((l) => l.id === lessonId))) {
+        throw new ApiError('NOT_FOUND', 'Хичээл олдсонгүй')
+      }
+      const map = progressMap()
+      const key = `${user.id}:${courseId}`
+      const done = map[key] ?? []
+      if (!done.includes(lessonId)) map[key] = [...done, lessonId]
+      writeJson(opts.storage, PROGRESS_KEY, map)
+      return { courseId, completedLessonIds: map[key] ?? done }
+    },
   }
 }
