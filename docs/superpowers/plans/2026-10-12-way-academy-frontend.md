@@ -406,7 +406,7 @@ test('ErrorState calls onRetry', async () => {
 - Consumes: `useApi`, `CourseCard`, `states`, `levelLabel`.
 - Produces: `useCourses(filter: CourseFilter)`, `useCategories()` (`queries.ts`).
 - HomePage: hero (`<h1>` "Way Academy"-д тохирсон мэдлэгийн уриа, "Хичээлүүдийг үзэх" → `/courses`), "Онцлох хичээлүүд" (эхний 4 хичээл), ангиллуудын линк (`/courses?category=<нэр>`).
-- CatalogPage: шүүлтүүрийг URL query-ээс уншиж бичнэ (`q`, `category`, `level`). Талбарууд: `<input aria-label="Хайх">`, `<select aria-label="Ангилал">` ("Бүгд" + ангиллууд), `<select aria-label="Түвшин">` ("Бүгд" + `levelLabel`), `<select aria-label="Үнэ">` ("Бүгд", "50,000₮ хүртэл" = `50000`, "100,000₮ хүртэл" = `100000`). Хайлтын утга бичигдэх тусам шууд URL-д орно, debounce шаардлагагүй. Үр дүн хоосон бол "Хайлтад тохирох хичээл олдсонгүй".
+- CatalogPage: шүүлтүүрийг URL query-ээс уншиж бичнэ (`q`, `category`, `level`, `maxPrice`). Талбарууд: `<input aria-label="Хайх">`, `<select aria-label="Ангилал">` ("Бүгд" + ангиллууд), `<select aria-label="Түвшин">` ("Бүгд" + `levelLabel`), `<select aria-label="Үнэ">` ("Бүгд", "50,000₮ хүртэл" = `50000`, "100,000₮ хүртэл" = `100000`). Хайлтын утга бичигдэх тусам шууд URL-д орно, debounce шаардлагагүй. Үр дүн хоосон бол "Хайлтад тохирох хичээл олдсонгүй".
 
 - [ ] **Step 1: Failing тестүүд бичих:**
 
