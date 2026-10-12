@@ -77,7 +77,7 @@ test('root renders layout with brand', () => {
 
 **Interfaces:**
 - Produces:
-  - `types.ts`: `Level`, `Course`, `Section`, `Lesson`, `User`, `Order`, `Progress`. Талбаруудыг spec-ийн 4-р хэсгээс яг хуулна. Мөн `CourseFilter = { q?: string; category?: string; level?: Level }`.
+  - `types.ts`: `Level`, `Course`, `Section`, `Lesson`, `User`, `Order`, `Progress`. Талбаруудыг spec-ийн 4-р хэсгээс яг хуулна. Мөн `CourseFilter = { q?: string; category?: string; level?: Level; maxPrice?: number }`. Spec-д үнээр шүүх шаардлага байгаа тул `maxPrice` талбарыг нэмсэн.
   - `errors.ts`: `type ApiErrorCode = 'UNAUTHORIZED'|'NOT_FOUND'|'FORBIDDEN'|'VALIDATION'|'UNKNOWN'`; `class ApiError extends Error { code: ApiErrorCode }` (`constructor(code, message)`); `isApiError(e: unknown): e is ApiError`.
   - `client.ts`: `interface ApiClient`. Аргуудыг spec-ийн 3-р хэсгээс яг хуулна, гагцхүү `getCourses(filter?: CourseFilter)` төрөлтэй.
   - `storage.ts`: `readJson<T>(storage: Storage, key: string, fallback: T): T` (key байхгүй эсвэл JSON эвдэрсэн үед `fallback` буцаана), `writeJson(storage: Storage, key: string, value: unknown): void`.
@@ -116,6 +116,12 @@ test('getCourses filters by category and level', async () => {
   const r = await api().getCourses({ category: 'Дизайн' });
   expect(r.every(c => c.category === 'Дизайн')).toBe(true);
   expect(await api().getCourses({ level: 'advanced' })).toHaveLength(1);
+});
+test('getCourses filters by maxPrice inclusive', async () => {
+  const r = await api().getCourses({ maxPrice: 39000 });
+  expect(r.every(c => c.price <= 39000)).toBe(true);
+  expect(r.map(c => c.slug)).toContain('figma-undsen');
+  expect(r.map(c => c.slug)).not.toContain('react-ekhlel');
 });
 test('search is case-insensitive, trimmed, matches title', async () => {
   const r = await api().getCourses({ q: '  REACT ' });
@@ -400,7 +406,7 @@ test('ErrorState calls onRetry', async () => {
 - Consumes: `useApi`, `CourseCard`, `states`, `levelLabel`.
 - Produces: `useCourses(filter: CourseFilter)`, `useCategories()` (`queries.ts`).
 - HomePage: hero (`<h1>` "Way Academy"-д тохирсон мэдлэгийн уриа, "Хичээлүүдийг үзэх" → `/courses`), "Онцлох хичээлүүд" (эхний 4 хичээл), ангиллуудын линк (`/courses?category=<нэр>`).
-- CatalogPage: шүүлтүүрийг URL query-ээс уншиж бичнэ (`q`, `category`, `level`). Талбарууд: `<input aria-label="Хайх">`, `<select aria-label="Ангилал">` ("Бүгд" + ангиллууд), `<select aria-label="Түвшин">` ("Бүгд" + `levelLabel`). Хайлтын утга бичигдэх тусам шууд URL-д орно, debounce шаардлагагүй. Үр дүн хоосон бол "Хайлтад тохирох хичээл олдсонгүй".
+- CatalogPage: шүүлтүүрийг URL query-ээс уншиж бичнэ (`q`, `category`, `level`). Талбарууд: `<input aria-label="Хайх">`, `<select aria-label="Ангилал">` ("Бүгд" + ангиллууд), `<select aria-label="Түвшин">` ("Бүгд" + `levelLabel`), `<select aria-label="Үнэ">` ("Бүгд", "50,000₮ хүртэл" = `50000`, "100,000₮ хүртэл" = `100000`). Хайлтын утга бичигдэх тусам шууд URL-д орно, debounce шаардлагагүй. Үр дүн хоосон бол "Хайлтад тохирох хичээл олдсонгүй".
 
 - [ ] **Step 1: Failing тестүүд бичих:**
 
@@ -414,6 +420,11 @@ test('catalog reads category from URL', async () => {
   expect(await screen.findByRole('link', { name: 'Figma үндэс' })).toBeInTheDocument();
   expect(screen.queryByRole('link', { name: 'React эхлэл' })).not.toBeInTheDocument();
   expect(screen.getByLabelText('Ангилал')).toHaveValue('Дизайн');
+});
+test('price filter reads maxPrice from URL', async () => {
+  renderApp('/courses?maxPrice=39000');
+  expect(await screen.findByRole('link', { name: 'Figma үндэс' })).toBeInTheDocument();
+  expect(screen.queryByRole('link', { name: 'React эхлэл' })).not.toBeInTheDocument();
 });
 test('typing in search updates URL and results', async () => {
   const { user, router } = renderApp('/courses');
@@ -634,7 +645,7 @@ test('checkout requires login', async () => {
 });
 ```
 
-- [ ] **Step 2:** FAIL. **Step 3:** Хэрэгжүүлэх. Давхар дарахаас хамгаалахдаа `disabled={mutation.isPending}` дээр нэмээд click handler-ийн эхэнд `if (mutation.isPending) return` шалгалт хийнэ. **Step 4:** PASS.
+- [ ] **Step 2:** FAIL. **Step 3:** Хэрэгжүүлэх. Давхар дарахаас хамгаалахдаа `disabled={mutation.isPending}` дээр нэмээд `useRef<boolean>` flag ашиглана: click handler нь flag `true` бол шууд буцна, `mutate`-ийн өмнө flag-ийг `true` болгож, `onError`-д `false` болгоно. `isPending` нь хоёр хурдан даралтын хооронд хуучин утгаа харуулж болзошгүй тул ref хэрэгтэй. **Step 4:** PASS.
 - [ ] **Step 5: Commit** — `feat: cart and mock QPay checkout`
 
 ---
