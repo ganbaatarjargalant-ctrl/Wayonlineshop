@@ -88,7 +88,7 @@ export function createMockApi(opts: MockApiOptions): ApiClient {
         .filter((c) => !filter.category || c.category === filter.category)
         .filter((c) => !filter.level || c.level === filter.level)
         .filter((c) => filter.maxPrice === undefined || c.price <= filter.maxPrice)
-        .filter((c) => !q || normalize(c.title).includes(q) || normalize(c.description).includes(q))
+        .filter((c) => !q || [c.title, c.description, c.category, c.instructor.name].some((t) => normalize(t).includes(q)))
         .map(present)
     },
 

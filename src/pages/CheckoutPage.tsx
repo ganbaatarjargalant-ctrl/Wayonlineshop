@@ -4,7 +4,7 @@ import { Navigate, useNavigate } from 'react-router'
 import { useApi } from '@/api/ApiProvider'
 import { isApiError } from '@/api/errors'
 import { Button } from '@/components/Button'
-import { Skeleton } from '@/components/states'
+import { ErrorState, Skeleton } from '@/components/states'
 import { useCartStore } from '@/features/cart/cartStore'
 import { useCartCourses } from '@/features/cart/useCartCourses'
 import { formatPrice } from '@/lib/format'
@@ -14,7 +14,7 @@ export function CheckoutPage() {
   const queryClient = useQueryClient()
   const navigate = useNavigate()
   const clearCart = useCartStore((s) => s.clear)
-  const { courses, total, isLoading } = useCartCourses()
+  const { courses, total, isLoading, isError, refetch } = useCartCourses()
   // isPending нь хоёр хурдан даралтын хооронд шинэчлэгдэж амжихгүй байж болох тул ref-ээр хамгаална
   const submittingRef = useRef(false)
   const paidRef = useRef(false)
@@ -33,6 +33,7 @@ export function CheckoutPage() {
   })
 
   if (isLoading) return <Skeleton count={1} />
+  if (isError && !paidRef.current) return <ErrorState onRetry={refetch} />
   if (courses.length === 0 && !paidRef.current) return <Navigate to="/cart" replace />
 
   const handlePay = () => {

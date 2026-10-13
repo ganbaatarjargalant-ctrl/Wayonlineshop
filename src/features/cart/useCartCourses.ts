@@ -5,7 +5,13 @@ import { useMyCourses } from '@/features/course/queries'
 import { useCartStore } from './cartStore'
 
 /** Сагсны id-уудыг хичээл болгоно: байхгүй болон аль хэдийн худалдаж авсан хичээлийг хасна */
-export function useCartCourses(): { courses: Course[]; total: number; isLoading: boolean } {
+export function useCartCourses(): {
+  courses: Course[]
+  total: number
+  isLoading: boolean
+  isError: boolean
+  refetch: () => void
+} {
   const courseIds = useCartStore((s) => s.courseIds)
   const token = useAuthStore((s) => s.token)
   const all = useCourses({})
@@ -21,6 +27,11 @@ export function useCartCourses(): { courses: Course[]; total: number; isLoading:
   return {
     courses,
     total: courses.reduce((sum, c) => sum + c.price, 0),
-    isLoading: all.isPending || (!!token && mine.isPending),
+    isLoading: (all.isPending && !all.isError) || (!!token && mine.isPending && !mine.isError),
+    isError: all.isError || mine.isError,
+    refetch: () => {
+      if (all.isError) void all.refetch()
+      if (mine.isError) void mine.refetch()
+    },
   }
 }

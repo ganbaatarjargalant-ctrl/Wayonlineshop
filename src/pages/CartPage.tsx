@@ -1,16 +1,17 @@
 import { Link } from 'react-router'
 import { Button, buttonClass } from '@/components/Button'
 import { CourseCard } from '@/components/CourseCard'
-import { Skeleton } from '@/components/states'
+import { ErrorState, Skeleton } from '@/components/states'
 import { useCartStore } from '@/features/cart/cartStore'
 import { useCartCourses } from '@/features/cart/useCartCourses'
 import { formatPrice } from '@/lib/format'
 
 export function CartPage() {
-  const { courses, total, isLoading } = useCartCourses()
+  const { courses, total, isLoading, isError, refetch } = useCartCourses()
   const remove = useCartStore((s) => s.remove)
 
   if (isLoading) return <Skeleton count={2} />
+  if (isError) return <ErrorState onRetry={refetch} />
 
   if (courses.length === 0) {
     return (
