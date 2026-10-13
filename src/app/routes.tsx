@@ -5,7 +5,9 @@ import { CatalogPage } from '@/pages/CatalogPage'
 import { CheckoutPage } from '@/pages/CheckoutPage'
 import { CourseDetailPage } from '@/pages/CourseDetailPage'
 import { HomePage } from '@/pages/HomePage'
+import { LearnPage } from '@/pages/LearnPage'
 import { LoginPage } from '@/pages/LoginPage'
+import { MyCoursesPage } from '@/pages/MyCoursesPage'
 import { NotFoundPage } from '@/pages/NotFoundPage'
 import { RegisterPage } from '@/pages/RegisterPage'
 import { Layout } from './Layout'
@@ -33,7 +35,15 @@ export const routes: RouteObject[] = [
         path: 'my-courses',
         element: (
           <RequireAuth>
-            <h1>Миний хичээлүүд</h1>
+            <MyCoursesPage />
+          </RequireAuth>
+        ),
+      },
+      {
+        path: 'learn/:slug/:lessonId',
+        element: (
+          <RequireAuth>
+            <LearnPage />
           </RequireAuth>
         ),
       },
