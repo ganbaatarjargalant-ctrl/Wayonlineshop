@@ -1,6 +1,8 @@
 import type { RouteObject } from 'react-router'
 import { RequireAuth } from '@/features/auth/RequireAuth'
+import { CartPage } from '@/pages/CartPage'
 import { CatalogPage } from '@/pages/CatalogPage'
+import { CheckoutPage } from '@/pages/CheckoutPage'
 import { CourseDetailPage } from '@/pages/CourseDetailPage'
 import { HomePage } from '@/pages/HomePage'
 import { LoginPage } from '@/pages/LoginPage'
@@ -16,6 +18,15 @@ export const routes: RouteObject[] = [
       { index: true, element: <HomePage /> },
       { path: 'courses', element: <CatalogPage /> },
       { path: 'courses/:slug', element: <CourseDetailPage /> },
+      { path: 'cart', element: <CartPage /> },
+      {
+        path: 'checkout',
+        element: (
+          <RequireAuth>
+            <CheckoutPage />
+          </RequireAuth>
+        ),
+      },
       { path: 'login', element: <LoginPage /> },
       { path: 'register', element: <RegisterPage /> },
       {
