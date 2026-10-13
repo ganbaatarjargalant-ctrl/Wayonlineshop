@@ -1,0 +1,44 @@
+import { screen } from '@testing-library/react'
+import { useCartStore } from '@/features/cart/cartStore'
+import { loginAs, renderApp, testApi } from '@/test/renderApp'
+
+test('shows course info and curriculum', async () => {
+  renderApp('/courses/react-ekhlel')
+  expect(await screen.findByRole('heading', { name: 'React эхлэл' })).toBeInTheDocument()
+  expect(screen.getByText('49,000₮')).toBeInTheDocument()
+  expect(screen.getByText('Анхны компонент')).toBeInTheDocument()
+  expect(screen.getByText('5:07')).toBeInTheDocument()
+})
+
+test('add to cart switches button to go-to-cart link', async () => {
+  const { user } = renderApp('/courses/react-ekhlel')
+  await user.click(await screen.findByRole('button', { name: 'Сагсанд нэмэх' }))
+  expect(useCartStore.getState().courseIds).toEqual(['c1'])
+  expect(screen.getByRole('link', { name: 'Сагс руу очих' })).toHaveAttribute('href', '/cart')
+})
+
+test('preview opens a video player', async () => {
+  const { user } = renderApp('/courses/react-ekhlel')
+  await user.click(await screen.findByRole('button', { name: 'Урьдчилан үзэх' }))
+  expect(document.querySelector('video')).toHaveAttribute('src', expect.stringContaining('flower.mp4'))
+})
+
+test('owned course shows watch link instead of add-to-cart', async () => {
+  const api = testApi()
+  await loginAs(api, {})
+  await api.checkout(['c1'])
+  renderApp('/courses/react-ekhlel', { api })
+  expect(await screen.findByRole('link', { name: 'Үзэх' })).toHaveAttribute('href', '/learn/react-ekhlel/l1')
+  expect(screen.queryByRole('button', { name: 'Сагсанд нэмэх' })).not.toBeInTheDocument()
+})
+
+test('notice from navigation state is shown', async () => {
+  const { router } = renderApp('/')
+  await router.navigate('/courses/react-ekhlel', { state: { notice: 'Энэ хичээлийг худалдаж авна уу' } })
+  expect(await screen.findByText('Энэ хичээлийг худалдаж авна уу')).toBeInTheDocument()
+})
+
+test('unknown slug renders 404', async () => {
+  renderApp('/courses/nope')
+  expect(await screen.findByText('Хуудас олдсонгүй')).toBeInTheDocument()
+})
