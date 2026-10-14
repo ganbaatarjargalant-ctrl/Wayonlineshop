@@ -1,0 +1,42 @@
+# Way Academy — хөгжүүлэлтийн өгөгдлийн сан.
+# Нууц үг нь зөвхөн локал хөгжүүлэлтэд. Production-д хэзээ ч эдгээр утгыг хэрэглэхгүй.
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: way-db-dev
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: way
+      POSTGRES_PASSWORD: way_dev_only
+      POSTGRES_DB: way_dev
+    ports:
+      - '5432:5432'
+    volumes:
+      - way-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U way -d way_dev']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # Тестийн сан — тест хооронд бүрэн цэвэрлэгддэг тул volume байхгүй (tmpfs).
+  db-test:
+    image: postgres:16-alpine
+    container_name: way-db-test
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: way
+      POSTGRES_PASSWORD: way_dev_only
+      POSTGRES_DB: way_test
+    ports:
+      - '5433:5432'
+    tmpfs:
+      - /var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U way -d way_test']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  way-db-data:

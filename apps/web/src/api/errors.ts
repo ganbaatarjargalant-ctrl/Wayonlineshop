@@ -1,4 +1,6 @@
-export type ApiErrorCode = 'UNAUTHORIZED' | 'NOT_FOUND' | 'FORBIDDEN' | 'VALIDATION' | 'UNKNOWN'
+import type { ApiErrorCode } from '@way/contract'
+
+export type { ApiErrorCode }
 
 export class ApiError extends Error {
   code: ApiErrorCode

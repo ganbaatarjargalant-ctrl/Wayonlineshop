@@ -1,3 +1,8 @@
+/**
+ * Frontend болон backend хоёрын хуваалцдаг API гэрээ.
+ * Хоёр тал зөрвөл build шууд унана — гэрээг нэг эх сурвалжид байлгах нь гол зорилго.
+ */
+
 export type Level = 'beginner' | 'intermediate' | 'advanced'
 
 export interface Lesson {
@@ -53,3 +58,6 @@ export interface CourseFilter {
   level?: Level
   maxPrice?: number
 }
+
+/** Сервер болон клиентийн алдааны нэгдсэн код. HTTP status-тай 1:1 тааруулагдана. */
+export type ApiErrorCode = 'UNAUTHORIZED' | 'NOT_FOUND' | 'FORBIDDEN' | 'VALIDATION' | 'UNKNOWN'
