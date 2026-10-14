@@ -17,8 +17,8 @@ function MyCourseItem({ course }: { course: Course }) {
       course={course}
       footer={
         <div className="space-y-2">
-          <div className="h-2 overflow-hidden rounded-full bg-slate-200" aria-hidden="true">
-            <div className="h-full bg-green-500" style={{ width: `${percent}%` }} />
+          <div className="h-2 overflow-hidden rounded-full bg-slate-100" aria-hidden="true">
+            <div className="h-full rounded-full bg-brand-500" style={{ width: `${percent}%` }} />
           </div>
           <div className="flex items-center justify-between">
             <span className="text-sm text-slate-600">Явц: {percent}%</span>
@@ -37,7 +37,7 @@ export function MyCoursesPage() {
 
   return (
     <section>
-      <h1 className="mb-4 text-2xl font-bold">Миний хичээлүүд</h1>
+      <h1 className="mb-4 text-2xl font-extrabold">Миний хичээлүүд</h1>
       {isPending ? (
         <Skeleton count={3} />
       ) : isError ? (

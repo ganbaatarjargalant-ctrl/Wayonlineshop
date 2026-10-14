@@ -22,7 +22,7 @@ export function RegisterPage() {
       footer={
         <>
           Бүртгэлтэй юу?{' '}
-          <Link to={loginHref} className="text-indigo-600 hover:underline">
+          <Link to={loginHref} className="text-brand-600 hover:underline">
             Нэвтрэх хуудас руу
           </Link>
         </>

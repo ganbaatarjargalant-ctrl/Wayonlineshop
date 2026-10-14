@@ -54,10 +54,10 @@ export function AuthForm({
   }
 
   return (
-    <div className="mx-auto max-w-md rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-      <h1 className="mb-4 text-2xl font-bold">{title}</h1>
+    <div className="mx-auto mt-4 max-w-md rounded-3xl border border-slate-200 bg-white p-8 shadow-xl shadow-brand-900/5">
+      <h1 className="mb-6 text-2xl font-extrabold">{title}</h1>
       {apiError && (
-        <p role="alert" className="mb-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
+        <p role="alert" className="mb-4 rounded-xl bg-red-50 px-3 py-2 text-sm text-red-700">
           {apiError}
         </p>
       )}
@@ -74,7 +74,7 @@ export function AuthForm({
               value={values[f.name]}
               onChange={(e) => setValues((v) => ({ ...v, [f.name]: e.target.value }))}
               aria-invalid={!!errors[f.name]}
-              className="w-full rounded-lg border border-slate-300 px-3 py-2"
+              className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm shadow-sm transition focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 focus:outline-none"
             />
             {errors[f.name] && <p className="mt-1 text-sm text-red-600">{errors[f.name]}</p>}
           </div>

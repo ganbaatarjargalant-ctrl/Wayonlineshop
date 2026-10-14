@@ -42,10 +42,10 @@ export function CourseDetailPage() {
           </p>
         )}
         <div>
-          <span className="text-sm font-medium text-indigo-600">
+          <span className="text-sm font-medium text-brand-600">
             {course.category} · {levelLabel[course.level]}
           </span>
-          <h1 className="mt-1 text-3xl font-bold">{course.title}</h1>
+          <h1 className="mt-1 text-3xl font-extrabold sm:text-4xl">{course.title}</h1>
           <p className="mt-3 text-slate-600">{course.description}</p>
         </div>
 
@@ -62,7 +62,7 @@ export function CourseDetailPage() {
             course={course}
             renderAction={(lesson) =>
               lesson.isPreview && lesson.videoUrl ? (
-                <button type="button" className="text-indigo-600 hover:underline" onClick={() => setPreview(lesson)}>
+                <button type="button" className="text-brand-600 hover:underline" onClick={() => setPreview(lesson)}>
                   Урьдчилан үзэх
                 </button>
               ) : null
@@ -70,7 +70,7 @@ export function CourseDetailPage() {
           />
         </section>
 
-        <section className="flex items-start gap-4 rounded-xl border border-slate-200 bg-white p-4">
+        <section className="flex items-start gap-4 rounded-2xl border border-slate-200 bg-white p-4">
           <img src={course.instructor.avatar} alt="" className="h-14 w-14 rounded-full" />
           <div>
             <h2 className="font-semibold">{course.instructor.name}</h2>
@@ -79,9 +79,9 @@ export function CourseDetailPage() {
         </section>
       </div>
 
-      <aside className="h-fit space-y-4 rounded-xl border border-slate-200 bg-white p-4 lg:sticky lg:top-4">
+      <aside className="h-fit space-y-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm lg:sticky lg:top-24">
         <img src={course.thumbnail} alt="" className="aspect-video w-full rounded-lg object-cover" />
-        <p className="text-2xl font-bold">{formatPrice(course.price)}</p>
+        <p className="text-3xl font-extrabold">{formatPrice(course.price)}</p>
         {!ownershipKnown ? null : owned && firstLesson ? (
           <Link to={`/learn/${course.slug}/${firstLesson.id}`} className={`${buttonClass()} w-full`}>
             Үзэх

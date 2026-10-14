@@ -21,7 +21,7 @@ export function LoginPage() {
       footer={
         <>
           Бүртгэлгүй юу?{' '}
-          <Link to={registerHref} className="text-indigo-600 hover:underline">
+          <Link to={registerHref} className="text-brand-600 hover:underline">
             Бүртгүүлэх
           </Link>
         </>

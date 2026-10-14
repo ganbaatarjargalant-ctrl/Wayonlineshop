@@ -1,1 +1,40 @@
 @import "tailwindcss";
+
+/* Way Academy дизайн систем: гүн ногоовтор цэнхэр (brand) + дулаан шар (accent) */
+@theme {
+  --font-sans: "Manrope", ui-sans-serif, system-ui, sans-serif;
+
+  --color-brand-50: #effaf9;
+  --color-brand-100: #d5f1ee;
+  --color-brand-200: #ade3de;
+  --color-brand-300: #7bcdc7;
+  --color-brand-400: #4bb0ab;
+  --color-brand-500: #2f9490;
+  --color-brand-600: #237774;
+  --color-brand-700: #1f605e;
+  --color-brand-800: #1d4d4c;
+  --color-brand-900: #1b4140;
+  --color-brand-950: #0a2626;
+
+  --color-accent-300: #fcd581;
+  --color-accent-400: #f9b949;
+  --color-accent-500: #f29d1f;
+  --color-accent-600: #d97a0d;
+}
+
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-brand-500);
+    outline-offset: 2px;
+  }
+
+  h1,
+  h2,
+  h3 {
+    letter-spacing: -0.015em;
+  }
+}

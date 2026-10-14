@@ -43,19 +43,19 @@ export function CheckoutPage() {
   }
 
   return (
-    <section className="mx-auto max-w-md rounded-xl border border-slate-200 bg-white p-6 text-center shadow-sm">
+    <section className="mx-auto mt-4 max-w-md rounded-3xl border border-slate-200 bg-white p-8 text-center shadow-xl shadow-brand-900/5">
       <h1 className="mb-2 text-2xl font-bold">QPay-ээр төлөх</h1>
-      <p className="mb-4 text-lg font-semibold">Нийт: {formatPrice(total)}</p>
+      <p className="mb-6 text-3xl font-extrabold text-brand-700">Нийт: {formatPrice(total)}</p>
       <div
         aria-label="QPay QR код"
         role="img"
-        className="mx-auto mb-4 flex h-48 w-48 items-center justify-center rounded-lg bg-slate-200 text-sm text-slate-500"
+        className="mx-auto mb-4 flex h-52 w-52 items-center justify-center rounded-2xl border-2 border-dashed border-brand-300 bg-brand-50 text-sm font-semibold text-brand-700"
       >
         QR код
       </div>
       <p className="mb-4 text-sm text-slate-500">Банкны аппаараа QR кодыг уншуулж төлбөрөө төлнө үү.</p>
       {pay.isError && (
-        <p role="alert" className="mb-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
+        <p role="alert" className="mb-4 rounded-xl bg-red-50 px-3 py-2 text-sm text-red-700">
           {isApiError(pay.error) ? pay.error.message : 'Төлбөр амжилтгүй боллоо'}
         </p>
       )}

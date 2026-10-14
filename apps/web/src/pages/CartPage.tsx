@@ -26,7 +26,7 @@ export function CartPage() {
 
   return (
     <section>
-      <h1 className="mb-4 text-2xl font-bold">Сагс</h1>
+      <h1 className="mb-4 text-2xl font-extrabold">Сагс</h1>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {courses.map((c) => (
           <CourseCard
@@ -43,8 +43,8 @@ export function CartPage() {
           />
         ))}
       </div>
-      <div className="mt-6 flex flex-wrap items-center justify-end gap-4 rounded-xl border border-slate-200 bg-white p-4">
-        <p className="text-lg font-bold">Нийт: {formatPrice(total)}</p>
+      <div className="mt-6 flex flex-wrap items-center justify-end gap-4 rounded-2xl border border-slate-200 bg-white p-5">
+        <p className="text-xl font-extrabold">Нийт: {formatPrice(total)}</p>
         <Link to="/checkout" className={buttonClass()}>
           Төлбөр төлөх
         </Link>

@@ -2,7 +2,7 @@ import type { CourseFilter, Level } from '@/api/types'
 import { levelLabel } from '@/lib/format'
 import { useCategories } from './queries'
 
-const fieldClass = 'rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm'
+const fieldClass = 'rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm shadow-sm transition focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 focus:outline-none'
 
 const priceOptions = [
   { value: 50000, label: '50,000₮ хүртэл' },

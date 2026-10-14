@@ -38,7 +38,7 @@ export function CatalogPage() {
 
   return (
     <section>
-      <h1 className="mb-4 text-2xl font-bold">Хичээлүүд</h1>
+      <h1 className="mb-4 text-2xl font-extrabold">Хичээлүүд</h1>
       <CatalogFilters filter={filter} onChange={update} />
       {isPending ? (
         <Skeleton count={6} />
