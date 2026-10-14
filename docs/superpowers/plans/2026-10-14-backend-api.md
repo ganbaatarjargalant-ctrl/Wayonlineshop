@@ -15,13 +15,24 @@
 1. **Stack:** Node + Fastify + Prisma
 2. **QPay:** одоо бодитоор холбохгүй. Гэхдээ backend-д **бодит асинхрон бүтэц** (invoice → `pending` → webhook → `paid`) тавина, провайдерыг fake-ээр хэрэгжүүлнэ. Дараа нь QPay credential тавихад код өөрчлөгдөхгүй.
 3. **Гэрээ:** list DTO, batch явц, pagination-ийг одооноос зөв болгоно.
+4. **Видео:** бүх хичээл **YouTube** дээр (unlisted), backend нь зөвхөн `youtubeId`-г хадгална.
+
+### Видеоны шийдвэр ба хүлээн зөвшөөрсөн эрсдэл
+
+**Сонголт:** бүх видео YouTube дээр unlisted хэлбэрээр. Зардал 0₮, adaptive bitrate үнэгүй (сул мобайл сүлжээнд чухал), ажлын хэмжээ хамгийн бага.
+
+**Хүлээн зөвшөөрсөн эрсдэл:** YouTube-д хэрэглэгч тус бүрийн эрх шалгах механизм байхгүй. Unlisted линк нь хугацаа дуусдаггүй бөгөөд линк хүссэн хэн ч, нэвтрэхгүйгээр үзэх боломжтой. Төлсөн хэрэглэгч линкээ хуваалцвал paywall хүчингүй болно. Энэ эрсдэлийг **мэдсээр хүлээн зөвшөөрсөн** (MVP-г хурдан гаргаж эрэлт шалгах зорилгоор).
+
+**Эрсдэлийг хязгаарлах арга (хэрэгжүүлнэ):** `youtubeId`-г эзэмшээгүй хэрэглэгчид **хэзээ ч буцаахгүй**. Ингэснээр санамсаргүй хүн API-гаас бүх видеоны ID-г хурааж авах боломжгүй болно — эрсдэл нь "төлсөн хүн линк хуваалцах" хэмжээнд хумигдана.
+
+**Дараа хамгаалалт нэмэх бол:** `Lesson`-д `videoProvider` enum нэмж, `bunny`/`r2` хувилбарыг signed URL-тай зэрэгцүүлнэ. Өөрчлөлт нь `Lesson` схем, backend-ийн URL шийдэх хэсэг, `VideoPlayer.tsx` гэсэн 3 цэгт хумигдана.
 
 ## Global Constraints
 
 - Алдааны хариу нь frontend-ийн `ApiErrorCode`-той нэг-нэгээр тааруулагдана:
   `VALIDATION`→400, `UNAUTHORIZED`→401, `FORBIDDEN`→403, `NOT_FOUND`→404, `UNKNOWN`→500.
   Хариуны бие: `{ "code": "...", "message": "..." }`. Message нь монголоор, хэрэглэгчид харуулахад тохиромжтой.
-- **Нууц мэдээлэл хэзээ ч кодонд байхгүй.** `DATABASE_URL`, `JWT_SECRET`, `VIDEO_SIGNING_SECRET` зэрэг нь env-ээс. Сервер **эхлэх үед** Zod-оор шалгаж, байхгүй бол шууд унана (fail fast).
+- **Нууц мэдээлэл хэзээ ч кодонд байхгүй.** `DATABASE_URL`, `JWT_SECRET` зэрэг нь env-ээс. Сервер **эхлэх үед** Zod-оор шалгаж, байхгүй бол шууд унана (fail fast).
 - Бүх input системийн хил дээр Zod schema-гаар валидацилагдана (Fastify schema эсвэл handler дээр).
 - Алдааны message дотоод дэлгэрэнгүйг (SQL, stack, файлын зам) **хэзээ ч гаргахгүй**. Дотоод дэлгэрэнгүйг зөвхөн сервер лог руу.
 - `/auth/*` endpoint-ууд дээр rate limit (`@fastify/rate-limit`).
@@ -73,6 +84,11 @@ wayonlineshop/Wayonlineshop/
 | `Order.status: 'paid'` | `'pending' \| 'paid' \| 'failed'` | асинхрон төлбөр |
 | `checkout(ids): Promise<Order>` | `checkout(ids): Promise<PaymentIntent>` | invoice + QR буцаана |
 | — | `getOrder(id): Promise<Order>` | төлбөрийн статус polling |
+| `Lesson.videoUrl?: string` | `Lesson.youtubeId?: string` | YouTube embed; URL-ийн параметрийг клиент шийднэ |
+
+> **Дарааллын тэмдэглэл:** `videoUrl` → `youtubeId` нэрийн солилт нь `VideoPlayer`-ийг зэрэг өөрчлөхийг шаардана (эс тэгвээс build унана). Тиймээс энэ хоёрыг **Phase 8-д нэг нэгж** болгон хийнэ, Phase 1-д `videoUrl` хэвээр үлдэнэ. Phase 1 нь зөвхөн каталог/явц/төлбөрийн гэрээг хөндөнө.
+>
+> Backend нь Phase 3-аас эхлэн `youtubeId`-г хэрэглэнэ. Phase 2–8-д frontend **mock дээр** ажиллаж байгаа тул хоёр тал зөрж байх нь асуудал биш — Phase 8-д contract+mock+player зэрэг солигдож, Phase 9-д бодит API-тай холбогдоход бүрэн нийцнэ.
 
 ```ts
 // packages/contract
@@ -112,7 +128,7 @@ export interface PaymentIntent {
 ## Phase 2 — Fastify суурь
 
 - [ ] **Step 1:** `apps/api` scaffold. Fastify, TypeScript strict, `tsx` watch, Vitest.
-- [ ] **Step 2:** `config.ts` — Zod-оор env валидаци (`DATABASE_URL`, `JWT_SECRET` (min 32 тэмдэгт), `PORT`, `CORS_ORIGIN`, `VIDEO_SIGNING_SECRET`). Сервер эхлэхээс өмнө шалгана.
+- [ ] **Step 2:** `config.ts` — Zod-оор env валидаци (`DATABASE_URL`, `JWT_SECRET` (min 32 тэмдэгт), `PORT`, `CORS_ORIGIN`). Сервер эхлэхээс өмнө шалгана.
 - [ ] **Step 3:** Алдааны нэгдсэн хөрвүүлэгч — `AppError(code, message)` → HTTP status + `{code, message}`. Гэнэтийн алдаа 500 `UNKNOWN`, дэлгэрэнгүй нь зөвхөн лог руу.
 - [ ] **Step 4:** `@fastify/cors` (`CORS_ORIGIN`), `@fastify/helmet`, `@fastify/rate-limit`.
 - [ ] **Step 5:** `GET /health` + түүний тест.
@@ -135,7 +151,7 @@ model Course   { id String @id @default(uuid()) slug String @unique title String
 model Section  { id String @id @default(uuid()) courseId String order Int title String
                  lessons Lesson[] }
 model Lesson   { id String @id @default(uuid()) sectionId String order Int title String
-                 durationSec Int isPreview Boolean @default(false) videoKey String }
+                 durationSec Int isPreview Boolean @default(false) youtubeId String }
 model Order    { id String @id @default(uuid()) userId String total Int
                  status OrderStatus @default(pending) provider String
                  providerInvoiceId String? createdAt DateTime @default(now())
@@ -155,10 +171,13 @@ enum OrderStatus { pending paid failed }
 **Гол шийдвэрүүд:**
 - `Enrollment` нь `Order`-оос **тусдаа**. Төлбөр `paid` болоход enrollment үүснэ. Эрхийг order-оор бус enrollment-ээр шалгана — ингэснээр дараа нь бэлэг/купон/админ гараар эрх өгөхөд бүтэц өөрчлөгдөхгүй.
 - `OrderItem.priceAtPurchase` — хичээлийн үнэ дараа өөрчлөгдсөн ч түүх зөв хэвээр.
-- `Lesson.videoKey` нь **бүтэн URL биш**. URL-ийг сервер эрх шалгасны дараа signed болгож үүсгэнэ.
+- `Lesson.youtubeId` нь зөвхөн YouTube-ийн 11 тэмдэгтийн ID (бүтэн URL биш). Embed URL-ийг клиент угсарна — ингэснээр `nocookie`, `rel`, `origin` зэрэг параметрийг backend-д хатуу бичихгүй.
+- `youtubeId`-г эзэмшээгүй хэрэглэгчид буцаахгүй (дээрх "хүлээн зөвшөөрсөн эрсдэл" хэсгийг үз).
 
 - [ ] **Step 1:** schema бичих, `prisma migrate dev --name init`.
 - [ ] **Step 2:** `prisma/seed.ts` — `apps/web/src/api/mock/fixtures.ts`-ийн 8 хичээл, 4 категори, 5 багшийг оруулах. Idempotent (`upsert`).
+      Видеоны хувьд fixtures дээрх MDN-ийн MP4 линк ашиглагдахаа болино — хичээл тус бүрт **бодит YouTube ID** хэрэгтэй. Хэрэглэгч бичлэгүүдээ upload хийх хүртэл нийтийн demo ID-аар түр тавина (seed дээр `YOUTUBE_IDS` хүснэгт болгон тусгаарлаж, дараа нь солихыг хялбар болгоно).
+      Боломж: `thumbnail`-ийг picsum-ийн оронд `https://i.ytimg.com/vi/<id>/maxresdefault.jpg`-ээр авч, зураг тусад нь байршуулах шаардлагыг арилгана.
 - [ ] **Step 3:** Тестийн DB helper — тест хооронд truncate.
 - [ ] **Step 4: Commit** — `feat(api): prisma schema and seed from frontend fixtures`
 
@@ -189,7 +208,7 @@ enum OrderStatus { pending paid failed }
 | `GET /courses/:slug` | `Course` (sections-тэй, videoUrl нь эрхээр шүүгдсэн) |
 | `GET /categories` | `string[]` |
 
-- [ ] **Step 1: Тест бичих** (RED): шүүлт бүр; `q` нь гарчиг/тайлбар/багшийн нэрээр; pagination; `limit` дээр хязгаар (max 50, хэтэрвэл 400); байхгүй slug → 404; **эзэмшээгүй хэрэглэгчид preview биш хичээлийн `videoUrl` байхгүй**; эзэмшигчид байгаа.
+- [ ] **Step 1: Тест бичих** (RED): шүүлт бүр; `q` нь гарчиг/тайлбар/багшийн нэрээр; pagination; `limit` дээр хязгаар (max 50, хэтэрвэл 400); байхгүй slug → 404; **эзэмшээгүй хэрэглэгчид preview биш хичээлийн `youtubeId` байхгүй**; эзэмшигчид байгаа; `CourseSummary`-д `youtubeId` хэзээ ч байхгүй (list endpoint видеоны ID тараахгүй).
 - [ ] **Step 2:** `q` хайлтыг Postgres `ILIKE` + `pg_trgm` индексээр (монгол текстэд кирилл регистр зөв ажиллахыг тест)
 - [ ] **Step 3:** `present()`-ийн эквивалент сервер талд — `mockApi.ts:72`-ийн дүрмийг давтана. Enrollment-ээр шалгана.
 - [ ] **Step 4: Commit** — `feat(api): catalog endpoints with filters, pagination and paywall`
@@ -235,15 +254,36 @@ interface PaymentProvider {
 
 ---
 
-## Phase 8 — Видеоны эрх
+## Phase 8 — YouTube embed тоглуулагч
 
-**Асуудал:** `videoUrl`-ийг хариуд шууд тавих нь эрхийг **нэг л удаа** шалгана. Төлсөн хүн линкээ хуваалцвал хэн ч үзнэ.
+Signed URL-ийн ажил **хамаарахгүй болсон** (YouTube сонгосон тул). Үүний оронд хоёр зүйл:
 
-**Шийдэл:** `videoKey`-ээс **хугацаа дуусдаг signed URL** үүсгэнэ (HMAC + `expiresAt`, 15 минут). Хугацаа дууссан линк 403 болно.
+### 8a. Backend — `youtubeId`-г эрхээр шүүх
 
-- [ ] **Step 1: Тест бичих** (RED): эзэмшигч signed URL авна; эзэмшээгүй → `videoUrl` байхгүй; preview хичээл эрхгүйд ч ажиллана; подпись дэндүү өөрчлөгдсөн → 403; хугацаа дууссан → 403.
-- [ ] **Step 2:** `signVideoUrl(key, userId, ttl)` + `GET /video/:key?exp=&sig=` шалгалт.
-- [ ] **Step 3: Commit** — `feat(api): expiring signed video urls`
+- [ ] **Step 1: Тест бичих** (RED): эзэмшигч `youtubeId` авна; эзэмшээгүй → preview биш хичээлд `youtubeId` **байхгүй**; preview хичээлд эрхгүйд ч байна; `CourseSummary`-д хэзээ ч байхгүй.
+- [ ] **Step 2:** `present()`-ийн эквивалентыг `youtubeId` дээр хэрэгжүүлэх (Phase 5-д хийгдсэн бол зөвхөн батлах).
+
+### 8b. Frontend — `VideoPlayer.tsx`-ийг iframe болгох
+
+**Гол анхаарах зүйл:** одоогийн `<video>` tag нь `onEnded` event өгдөг бөгөөд `LearnPage.tsx:44` дээр үүгээр хичээлийг **автоматаар дууссан гэж тэмдэглэдэг**. Жирийн `<iframe>` нь event өгдөггүй тул энэ функц эвдэрнэ.
+
+**Шийдэл:** YouTube **IFrame Player API**-г ашиглана (`https://www.youtube.com/iframe_api`), `onStateChange` дээр `PlayerState.ENDED`-г барина.
+
+- [ ] **Step 1: Тест бичих** (RED): `youtubeId` ирэхэд iframe рендерлэгдэх; `aria-label`-д хичээлийн нэр байх; `youtubeId` байхгүй үед тоглуулагч рендерлэгдэхгүй. YouTube API-г тестэд mock хийнэ (гадаад script тестэд татагдахгүй).
+- [ ] **Step 2:** API script-ийг нэг л удаа ачаалах hook (`useYouTubeApi`) — хуудас хооронд дахин татахгүй.
+- [ ] **Step 3:** `VideoPlayer`-ийг `youtubeId` хүлээн авдаг болгож, `onEnded`-г `onStateChange`-ээс гаргах. Embed параметрүүд:
+  - `https://www.youtube-nocookie.com/embed/<id>` — cookie/tracking багасгасан домэйн
+  - `rel=0` (төгсгөлд санал болгох видеог нэг каналд хязгаарлана), `playsinline=1` (iOS), `origin=<window.location.origin>`
+- [ ] **Step 4:** `CourseDetailPage` болон `LearnPage`-ийн хэрэглээг шинэ prop-д тааруулах.
+- [ ] **Step 5:** `npm test && npm run build && npm run e2e` → ногоон. E2E дээр `locator('video')` нь `iframe` болж өөрчлөгдөнө.
+- [ ] **Step 6: Commit** — `feat(web): youtube iframe player with ended detection`
+
+### YouTube-ийн хязгаарлалтууд (хүлээн зөвшөөрсөн)
+
+- **`modestbranding` ажиллахаа больсон** — YouTube-ийн лого тоглуулагч дээр харагдана, нуух боломжгүй.
+- **"Watch on YouTube" линк** тоглуулагч дээр гарна — хэрэглэгч YouTube руу гарч болно.
+- **Сурталчилгаа** — каналыг монетизац хийгээгүй бол unlisted видеод ерөнхийдөө гарахгүй, гэхдээ YouTube эрхээ хадгална.
+- **Тоглуулагчийн дизайныг хянах боломж бага** — төлбөртэй хичээлд premium мэдрэмж бага байж магад.
 
 ---
 
@@ -271,6 +311,6 @@ interface PaymentProvider {
 
 ## Нээлттэй асуултууд
 
-1. **Видео хаана хадгалагдах вэ?** Одоо mock нь MDN-ийн нийтийн MP4. Бодитоор S3/R2 (+ CloudFront signed URL) эсвэл Bunny/Mux? Phase 8-ын хэрэгжүүлэлт үүнээс шалтгаална — одоогийн төлөвлөгөө нь өөрийн HMAC signing-ээр (провайдераас хараат бус) бичигдсэн.
+1. **Бодит YouTube ID-ууд хэзээ бэлэн болох вэ?** Seed-д 8 хичээлийн ID хэрэгтэй. Бэлэн болтол demo ID-аар түр тавина. Мөн бичлэгүүдийг **unlisted** болгож, тохиргоо дээр "Allow embedding"-ийг **заавал нээлттэй** байлгах шаардлагатай — хаалттай бол embed тоглохгүй.
 2. **Багш нар контент оруулах уу?** Хэрэв тийм бол админ/багшийн эрх, upload урсгал хэрэгтэй — энэ төлөвлөгөөнд **хамрагдаагүй**, тусдаа фаз болно.
 3. **Хичээл буцаах/төлбөр цуцлах** дүрэм? `Order.status`-д `refunded` нэмэх эсэх.
