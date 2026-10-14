@@ -1,9 +1,9 @@
 import type { ReactNode } from 'react'
 import { Link } from 'react-router'
-import type { Course } from '@/api/types'
+import type { CourseSummary } from '@/api/types'
 import { formatPrice, levelLabel } from '@/lib/format'
 
-export function CourseCard({ course, footer }: { course: Course; footer?: ReactNode }) {
+export function CourseCard({ course, footer }: { course: CourseSummary; footer?: ReactNode }) {
   return (
     <article className="group relative flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg hover:shadow-brand-900/5">
       <div className="relative aspect-video overflow-hidden bg-slate-100">

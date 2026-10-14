@@ -5,6 +5,8 @@ import { CourseCard } from '@/components/CourseCard'
 import { ErrorState, Skeleton } from '@/components/states'
 import { useCategories, useCourses } from '@/features/catalog/queries'
 
+const FEATURED_COUNT = 4
+
 const highlights = [
   { title: 'Хүссэн цагтаа', text: 'Видео хичээлээ өөрийн хэмнэлээр, хаанаас ч үзнэ.' },
   { title: 'Явцаа хянах', text: 'Үзсэн хичээлээ тэмдэглэж, хаанаас үргэлжлүүлэхээ мэднэ.' },
@@ -12,7 +14,8 @@ const highlights = [
 ]
 
 export function HomePage() {
-  const courses = useCourses({})
+  // Зөвхөн хэрэгтэй тоог татна — бүх каталогийг авч slice хийхгүй
+  const courses = useCourses({ limit: FEATURED_COUNT })
   const { data: categories = [] } = useCategories()
   const navigate = useNavigate()
   const [q, setQ] = useState('')
@@ -95,7 +98,7 @@ export function HomePage() {
           <ErrorState onRetry={() => courses.refetch()} />
         ) : (
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-            {courses.data.slice(0, 4).map((c) => (
+            {courses.data.items.map((c) => (
               <CourseCard key={c.id} course={c} />
             ))}
           </div>

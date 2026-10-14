@@ -1,6 +1,6 @@
 import { screen } from '@testing-library/react'
 import { useCartStore } from '@/features/cart/cartStore'
-import { loginAs, renderApp, testApi } from '@/test/renderApp'
+import { buyCourses, loginAs, renderApp, testApi } from '@/test/renderApp'
 
 test('shows course info and curriculum', async () => {
   renderApp('/courses/react-ekhlel')
@@ -26,7 +26,7 @@ test('preview opens a video player', async () => {
 test('owned course shows watch link instead of add-to-cart', async () => {
   const api = testApi()
   await loginAs(api, {})
-  await api.checkout(['c1'])
+  await buyCourses(api, ['c1'])
   renderApp('/courses/react-ekhlel', { api })
   expect(await screen.findByRole('link', { name: 'Үзэх' })).toHaveAttribute('href', '/learn/react-ekhlel/l1')
   expect(screen.queryByRole('button', { name: 'Сагсанд нэмэх' })).not.toBeInTheDocument()

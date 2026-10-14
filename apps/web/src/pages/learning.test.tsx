@@ -1,10 +1,10 @@
 import { screen } from '@testing-library/react'
-import { loginAs, renderApp, testApi } from '@/test/renderApp'
+import { buyCourses, loginAs, renderApp, testApi } from '@/test/renderApp'
 
 async function ownedSetup() {
   const api = testApi()
   await loginAs(api, {})
-  await api.checkout(['c1'])
+  await buyCourses(api, ['c1'])
   return api
 }
 
