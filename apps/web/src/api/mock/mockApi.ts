@@ -45,6 +45,8 @@ export function createMockApi(opts: MockApiOptions): ApiClient {
   }
 
   const orders = () => readJson<StoredOrder[]>(opts.storage, ORDERS_KEY, [])
+  const invoices = new Set<string>()
+  const paidInvoices = new Set<string>()
   const progressMap = () => readJson<Record<string, string[]>>(opts.storage, PROGRESS_KEY, {})
 
   function ownedIds(userId: string): Set<string> {
@@ -127,6 +129,27 @@ export function createMockApi(opts: MockApiOptions): ApiClient {
     async getMe() {
       await wait()
       return requireUser()
+    },
+
+    async createPayment({ amount }) {
+      await wait()
+      requireUser()
+      if (!Number.isInteger(amount) || amount <= 0) throw new ApiError('VALIDATION', 'Төлбөрийн дүн буруу байна')
+      const invoiceId = `mock-${crypto.randomUUID()}`
+      invoices.add(invoiceId)
+      return { invoiceId, amount, qrImage: null, shortUrl: null, bankApps: [], testMode: true }
+    },
+
+    async getPaymentStatus(invoiceId) {
+      await wait()
+      if (!invoices.has(invoiceId)) throw new ApiError('NOT_FOUND', 'Нэхэмжлэх олдсонгүй')
+      return { paid: paidInvoices.has(invoiceId) }
+    },
+
+    async simulatePayment(invoiceId) {
+      await wait()
+      if (!invoices.has(invoiceId)) throw new ApiError('NOT_FOUND', 'Нэхэмжлэх олдсонгүй')
+      paidInvoices.add(invoiceId)
     },
 
     async checkout(courseIds) {

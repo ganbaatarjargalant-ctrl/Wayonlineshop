@@ -27,20 +27,34 @@ test('cart hides owned and unknown ids', async () => {
   expect(screen.queryByRole('link', { name: 'React эхлэл' })).not.toBeInTheDocument()
 })
 
-test('checkout pays once even on double click, clears cart, goes to my courses', async () => {
+test('checkout creates invoice for total, completes once after payment, goes to my courses', async () => {
+  const api = testApi()
+  await loginAs(api, {})
+  const createSpy = vi.spyOn(api, 'createPayment')
+  const spy = vi.spyOn(api, 'checkout')
+  useCartStore.setState({ courseIds: ['c1'] })
+  const { user, router } = renderApp('/checkout', { api })
+  expect(await screen.findByRole('img', { name: 'QPay QR код' })).toBeInTheDocument()
+  expect(screen.getByText('Нийт: 49,000₮')).toBeInTheDocument()
+  expect(createSpy).toHaveBeenCalledTimes(1)
+  expect(createSpy.mock.calls[0]![0].amount).toBe(49000)
+  await user.dblClick(await screen.findByRole('button', { name: 'Төлсөнд тооцох (туршилт)' }))
+  await waitFor(() => expect(router.state.location.pathname).toBe('/my-courses'))
+  expect(spy).toHaveBeenCalledTimes(1)
+  expect(spy).toHaveBeenCalledWith(['c1'])
+  expect(useCartStore.getState().courseIds).toEqual([])
+})
+
+test('checkout does not complete until payment arrives', async () => {
   const api = testApi()
   await loginAs(api, {})
   const spy = vi.spyOn(api, 'checkout')
   useCartStore.setState({ courseIds: ['c1'] })
   const { user, router } = renderApp('/checkout', { api })
-  expect(await screen.findByLabelText('QPay QR код')).toBeInTheDocument()
-  expect(screen.getByText('Нийт: 49,000₮')).toBeInTheDocument()
-  const btn = await screen.findByRole('button', { name: 'Төлсөн' })
-  await user.dblClick(btn)
-  await waitFor(() => expect(router.state.location.pathname).toBe('/my-courses'))
-  expect(spy).toHaveBeenCalledTimes(1)
-  expect(spy).toHaveBeenCalledWith(['c1'])
-  expect(useCartStore.getState().courseIds).toEqual([])
+  await user.click(await screen.findByRole('button', { name: 'Төлбөр шалгах' }))
+  expect(await screen.findByText('Төлбөр хараахан ороогүй байна.')).toBeInTheDocument()
+  expect(spy).not.toHaveBeenCalled()
+  expect(router.state.location.pathname).toBe('/checkout')
 })
 
 test('checkout with empty cart goes back to cart', async () => {

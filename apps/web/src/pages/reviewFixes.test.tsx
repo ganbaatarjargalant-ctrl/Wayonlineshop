@@ -19,7 +19,7 @@ test('after paying, the learn page shows the video without a stale course', asyn
   const { user, router } = renderApp('/courses/react-ekhlel', { api })
   await user.click(await screen.findByRole('button', { name: 'Сагсанд нэмэх' }))
   await act(() => router.navigate('/checkout'))
-  await user.click(await screen.findByRole('button', { name: 'Төлсөн' }))
+  await user.click(await screen.findByRole('button', { name: 'Төлсөнд тооцох (туршилт)' }))
   await waitFor(() => expect(router.state.location.pathname).toBe('/my-courses'))
   await act(() => router.navigate('/learn/react-ekhlel/l2'))
   await screen.findByRole('heading', { name: 'Орчин бэлтгэх' })

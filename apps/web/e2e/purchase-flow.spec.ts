@@ -15,7 +15,7 @@ test('browse → buy → watch → progress', async ({ page }) => {
   await page.getByLabel('Нууц үг').fill('secret1')
   await page.getByRole('button', { name: 'Бүртгүүлэх' }).click()
   await expect(page).toHaveURL(/\/checkout$/)
-  await page.getByRole('button', { name: 'Төлсөн' }).click()
+  await page.getByRole('button', { name: 'Төлсөнд тооцох (туршилт)' }).click()
   await expect(page).toHaveURL(/\/my-courses$/)
   await expect(page.getByText('Явц: 0%')).toBeVisible()
   await page.getByRole('link', { name: 'Үргэлжлүүлэх' }).click()
