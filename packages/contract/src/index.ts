@@ -112,5 +112,15 @@ export interface CourseFilter {
   limit?: number
 }
 
-/** Сервер болон клиентийн алдааны нэгдсэн код. HTTP status-тай 1:1 тааруулагдана. */
-export type ApiErrorCode = 'UNAUTHORIZED' | 'NOT_FOUND' | 'FORBIDDEN' | 'VALIDATION' | 'UNKNOWN'
+/**
+ * Сервер болон клиентийн алдааны нэгдсэн код. HTTP status-тай 1:1 тааруулагдана:
+ * VALIDATION→400, UNAUTHORIZED→401, FORBIDDEN→403, NOT_FOUND→404,
+ * RATE_LIMITED→429, UNKNOWN→500.
+ */
+export type ApiErrorCode =
+  | 'UNAUTHORIZED'
+  | 'NOT_FOUND'
+  | 'FORBIDDEN'
+  | 'VALIDATION'
+  | 'RATE_LIMITED'
+  | 'UNKNOWN'

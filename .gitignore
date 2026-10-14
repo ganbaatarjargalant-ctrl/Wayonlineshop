@@ -13,6 +13,12 @@ dist
 dist-ssr
 *.local
 
+# Орчны нууцууд — .env.example-ээс бусад нь ХЭЗЭЭ Ч commit хийгдэхгүй
+.env
+.env.*
+!.env.example
+!.env.e2e
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
