@@ -29,6 +29,11 @@ export interface ApiClient {
   checkout(courseIds: string[]): Promise<PaymentIntent>
   /** Төлбөрийн статусыг хянах. Зөвхөн өөрийн захиалга. */
   getOrder(orderId: string): Promise<Order>
+  /**
+   * Зөвхөн QPay sandbox-д: туршилтын QR-ийг жинхэнэ банк уншихгүй тул төлсөнд тооцно.
+   * Production болон mock-д байхгүй (undefined).
+   */
+  simulatePayment?(orderId: string): Promise<void>
   getMyCourses(): Promise<MyCourse[]>
   getProgress(courseId: string): Promise<Progress>
   markLessonComplete(courseId: string, lessonId: string): Promise<Progress>

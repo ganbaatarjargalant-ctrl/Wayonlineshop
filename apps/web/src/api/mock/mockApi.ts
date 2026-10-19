@@ -57,7 +57,15 @@ function fakeQr(orderId: string): { text: string; image: string } {
   return { text, image: `data:image/svg+xml;utf8,${encodeURIComponent(svg)}` }
 }
 
-export function createMockApi(opts: MockApiOptions): ApiClient {
+export interface MockApi extends ApiClient {
+  /**
+   * Гадны провайдер (QPay) төлбөрийг баталгаажуулсны дараа захиалгыг `paid` болгоно.
+   * Бодит backend-д энэ нь webhook-ийн үүрэг.
+   */
+  markOrderPaid(orderId: string): void
+}
+
+export function createMockApi(opts: MockApiOptions): MockApi {
   const { delay = [200, 500], payAfterPolls = 0 } = opts
 
   async function wait() {
@@ -246,6 +254,15 @@ export function createMockApi(opts: MockApiOptions): ApiClient {
         all.map((o, j) => (j === i ? next : o)),
       )
       return publicOrder(next)
+    },
+
+    markOrderPaid(orderId) {
+      const all = orders()
+      writeJson(
+        opts.storage,
+        ORDERS_KEY,
+        all.map((o) => (o.id === orderId && o.status === 'pending' ? { ...o, status: 'paid' as const } : o)),
+      )
     },
 
     async getMyCourses() {

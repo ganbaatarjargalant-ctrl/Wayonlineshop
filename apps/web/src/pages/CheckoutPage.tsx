@@ -29,6 +29,12 @@ export function CheckoutPage() {
     onSuccess: (created) => setIntent(created),
   })
 
+  // Зөвхөн QPay sandbox-д: туршилтын QR-ийг банк уншихгүй тул төлсөнд тооцоод шууд шалгана
+  const simulate = useMutation({
+    mutationFn: (orderId: string) => api.simulatePayment!(orderId),
+    onSuccess: () => order.refetch(),
+  })
+
   // Захиалга `pending` байх хугацаанд л шалгана, төлөгдмөгц polling зогсоно
   const order = useQuery({
     queryKey: ['order', intent?.orderId],
@@ -91,6 +97,16 @@ export function CheckoutPage() {
           <p role="status" className="mb-4 text-sm font-semibold text-brand-600">
             Төлбөрийг хүлээж байна...
           </p>
+          {api.simulatePayment && (
+            <Button
+              variant="secondary"
+              className="mb-2 w-full"
+              onClick={() => simulate.mutate(intent.orderId)}
+              disabled={simulate.isPending}
+            >
+              Төлсөнд тооцох (туршилт)
+            </Button>
+          )}
         </>
       )}
 
