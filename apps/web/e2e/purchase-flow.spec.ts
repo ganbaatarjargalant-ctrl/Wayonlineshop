@@ -2,6 +2,7 @@ import { expect, test } from '@playwright/test'
 
 test('browse → buy → watch → progress', async ({ page }) => {
   await page.goto('/courses')
+  await expect(page.getByText('Хуудас 1 / 2')).toBeVisible()
   await page.getByLabel('Хайх').fill('react')
   await page.getByRole('link', { name: 'React эхлэл' }).click()
   await page.getByRole('button', { name: 'Сагсанд нэмэх' }).click()
@@ -15,7 +16,8 @@ test('browse → buy → watch → progress', async ({ page }) => {
   await page.getByLabel('Нууц үг').fill('secret1')
   await page.getByRole('button', { name: 'Бүртгүүлэх' }).click()
   await expect(page).toHaveURL(/\/checkout$/)
-  await page.getByRole('button', { name: 'Төлсөнд тооцох (туршилт)' }).click()
+  // Захиалга `pending`-ээр үүсч, fake провайдер төлснийг polling мэдэрмэгц /my-courses руу гарна
+  await page.getByRole('button', { name: 'QPay-ээр төлөх' }).click()
   await expect(page).toHaveURL(/\/my-courses$/)
   await expect(page.getByText('Явц: 0%')).toBeVisible()
   await page.getByRole('link', { name: 'Үргэлжлүүлэх' }).click()

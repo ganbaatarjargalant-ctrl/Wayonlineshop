@@ -1,34 +1,29 @@
 import { Link } from 'react-router'
-import type { Course } from '@/api/types'
+import type { MyCourse } from '@/api/types'
 import { buttonClass } from '@/components/Button'
 import { CourseCard } from '@/components/CourseCard'
 import { EmptyState, ErrorState, Skeleton } from '@/components/states'
 import { useMyCourses } from '@/features/course/queries'
-import { progressPercent, resumeLessonId } from '@/features/learning/progress'
-import { useProgress } from '@/features/learning/queries'
 
-function MyCourseItem({ course }: { course: Course }) {
-  const { data } = useProgress(course.id, { enabled: true })
-  const completed = data?.completedLessonIds ?? []
-  const percent = progressPercent(course, completed)
-
+/**
+ * Явцыг сервер тооцоолж `MyCourse`-д хамт буцаадаг тул карт тутамд
+ * тусдаа хүсэлт гардаггүй (өмнө нь 1 + N хүсэлт болдог байсан).
+ */
+function progressFooter(course: MyCourse) {
   return (
-    <CourseCard
-      course={course}
-      footer={
-        <div className="space-y-2">
-          <div className="h-2 overflow-hidden rounded-full bg-slate-100" aria-hidden="true">
-            <div className="h-full rounded-full bg-brand-500" style={{ width: `${percent}%` }} />
-          </div>
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-slate-600">Явц: {percent}%</span>
-            <Link to={`/learn/${course.slug}/${resumeLessonId(course, completed)}`} className={buttonClass()}>
-              Үргэлжлүүлэх
-            </Link>
-          </div>
-        </div>
-      }
-    />
+    <div className="space-y-2">
+      <div className="h-2 overflow-hidden rounded-full bg-slate-100" aria-hidden="true">
+        <div className="h-full rounded-full bg-brand-500" style={{ width: `${course.progressPercent}%` }} />
+      </div>
+      <div className="flex items-center justify-between">
+        <span className="text-sm text-slate-600">Явц: {course.progressPercent}%</span>
+        {course.resumeLessonId && (
+          <Link to={`/learn/${course.slug}/${course.resumeLessonId}`} className={buttonClass()}>
+            Үргэлжлүүлэх
+          </Link>
+        )}
+      </div>
+    </div>
   )
 }
 
@@ -47,7 +42,7 @@ export function MyCoursesPage() {
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {data.map((c) => (
-            <MyCourseItem key={c.id} course={c} />
+            <CourseCard key={c.id} course={c} footer={progressFooter(c)} />
           ))}
         </div>
       )}

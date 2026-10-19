@@ -122,11 +122,8 @@ export function qpayPlugin(env: Record<string, string>): Plugin {
     })
     return {
       invoiceId: inv.invoice_id,
-      amount,
+      qrText: inv.qr_text,
       qrImage: `data:image/png;base64,${inv.qr_image}`,
-      shortUrl: inv.qPay_shortUrl ?? null,
-      bankApps: (inv.urls ?? []).map(({ name, description, logo, link }) => ({ name, description, logo, link })),
-      testMode,
     }
   }
 
@@ -166,6 +163,8 @@ export function qpayPlugin(env: Record<string, string>): Plugin {
 
   return {
     name: 'way-qpay',
+    // Клиент sandbox эсэхийг мэдэж "туршилтаар төлөх" товч харуулна. Нууц мэдээлэл биш.
+    config: () => ({ define: { 'import.meta.env.VITE_QPAY_SANDBOX': JSON.stringify(String(testMode)) } }),
     configureServer(server) {
       server.middlewares.use(handler)
       server.config.logger.info(`  QPay: ${testMode ? 'SANDBOX (туршилтын)' : cfg.baseUrl} горим`)

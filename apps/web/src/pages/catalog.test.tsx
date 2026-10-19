@@ -46,8 +46,43 @@ test('no results shows empty state', async () => {
 
 test('api failure shows error state with retry', async () => {
   const api = testApi()
-  api.getCourses = vi.fn().mockRejectedValueOnce(new ApiError('UNKNOWN', 'x')).mockResolvedValue([])
+  api.getCourses = vi
+    .fn()
+    .mockRejectedValueOnce(new ApiError('UNKNOWN', 'x'))
+    .mockResolvedValue({ items: [], total: 0, page: 1, limit: 6 })
   const { user } = renderApp('/courses', { api })
   await user.click(await screen.findByRole('button', { name: 'Дахин оролдох' }))
   expect(await screen.findByText('Хайлтад тохирох хичээл олдсонгүй')).toBeInTheDocument()
+})
+
+test('catalog paginates: 8 courses across 2 pages', async () => {
+  const { user, router } = renderApp('/courses')
+  expect(await screen.findByText('Хуудас 1 / 2')).toBeInTheDocument()
+  expect(screen.getByRole('button', { name: 'Өмнөх' })).toBeDisabled()
+  expect(screen.getByRole('link', { name: 'React эхлэл' })).toBeInTheDocument()
+
+  await user.click(screen.getByRole('button', { name: 'Дараах' }))
+  expect(await screen.findByText('Хуудас 2 / 2')).toBeInTheDocument()
+  expect(router.state.location.search).toContain('page=2')
+  expect(screen.queryByRole('link', { name: 'React эхлэл' })).not.toBeInTheDocument()
+  expect(screen.getByRole('button', { name: 'Дараах' })).toBeDisabled()
+})
+
+test('catalog reads page from URL', async () => {
+  renderApp('/courses?page=2')
+  expect(await screen.findByText('Хуудас 2 / 2')).toBeInTheDocument()
+})
+
+test('changing a filter resets back to page 1', async () => {
+  const { user, router } = renderApp('/courses?page=2')
+  await screen.findByText('Хуудас 2 / 2')
+  await user.selectOptions(screen.getByLabelText('Ангилал'), 'Дизайн')
+  await waitFor(() => expect(router.state.location.search).not.toContain('page=2'))
+  expect(await screen.findByRole('link', { name: 'Figma үндэс' })).toBeInTheDocument()
+})
+
+test('a single page of results shows no pagination', async () => {
+  renderApp('/courses?category=Дизайн')
+  expect(await screen.findByRole('link', { name: 'Figma үндэс' })).toBeInTheDocument()
+  expect(screen.queryByRole('navigation', { name: 'Хуудаслалт' })).not.toBeInTheDocument()
 })
